@@ -46,6 +46,37 @@ export async function PATCH(
       outcome: body.outcome,
     },
   });
+  
+await prisma.sceneVersion.create({
+  data:{
+    sceneId,
+    text:body.text || "",
+    type:"manual"
+  }
+});
+
+const versions =
+await prisma.sceneVersion.findMany({
+    where:{sceneId},
+    orderBy:{
+        createdAt:"desc"
+    }
+});
+
+if(versions.length>5){
+
+    const ids=versions
+    .slice(5)
+    .map(v=>v.id);
+
+    await prisma.sceneVersion.deleteMany({
+        where:{
+            id:{
+                in:ids
+            }
+        }
+    });
+}
 
   return NextResponse.json(scene);
 }

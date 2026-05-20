@@ -248,25 +248,46 @@ const selectedCharacters = allCharacters.filter(c =>
 async function handleSave() {
   setSaving(true);
 
-  await fetch(`/api/scenes/${sceneId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      content: scene.text,
-      goal: scene.goal,
-      conflict: scene.conflict,
-      emotional_tone: scene.emotional_tone,
-      outcome: scene.outcome,
-    }),
-  });
+  try {
 
-  await pushEvent(
-    "edit",
-    "Ручное сохранение",
-    scene.text
-  );
+    const res = await fetch(
+      `/api/scenes/${sceneId}`,
+      {
+        method:"PATCH",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          text:scene.text,
+          goal:scene.goal,
+          conflict:scene.conflict,
+          emotional_tone:scene.emotional_tone,
+          outcome:scene.outcome,
+        })
+      }
+    );
 
-  setSaving(false);
+    if(!res.ok){
+
+      const t=await res.text();
+
+      console.error(
+        "Save failed:",
+        t
+      );
+
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "scene-saved"
+      )
+    );
+
+  } finally{
+    setSaving(false);
+  }
 }
 
   async function handleRewrite() {
@@ -284,7 +305,6 @@ async function handleSave() {
     try {
       const result = await rewriteScene(
   sceneId,
-  scene.text,
   selectedCharacters
 );
       setRewrite(result.rewritten_text);

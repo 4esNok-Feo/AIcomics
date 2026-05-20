@@ -39,7 +39,7 @@ export default function SceneWorkspace({
   versions: initialVersions,
 }: Props) {
   const [analysis, setAnalysis] = useState<AnalyzeResult | null>(null);
-
+  const [currentText,setCurrentText]= useState(initialScene.text || "");
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
   const [sceneCharacters, setSceneCharacters] = useState<string[]>([]);
 
@@ -127,17 +127,21 @@ export default function SceneWorkspace({
       <div className="flex flex-1">
 
         <SceneEditor
-          sceneId={sceneId}
-          worldId={worldId}
-          initialScene={initialScene}
-          onAnalysis={setAnalysis}
-        />
+		sceneId={sceneId}
+		worldId={worldId}
+		initialScene={initialScene}
+		onAnalysis={setAnalysis}
+		onSceneChange={(scene)=>
+		setCurrentText(scene.text)
+		}
+		/>
 
         <SceneTimeline sceneId={sceneId} />
 
         <SceneVersionHistory
           sceneId={sceneId}
           versions={versions}
+		  currentText={currentText}
           onReload={loadVersions}
           onRestore={(text) => {
             window.dispatchEvent(
