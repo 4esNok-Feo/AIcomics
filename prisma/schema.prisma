@@ -1,0 +1,106 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model World {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+
+  scenes     Scene[]
+  characters Character[]
+}
+
+model Scene {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  worldId   String
+  world     World    @relation(fields: [worldId], references: [id])
+
+  characters SceneCharacter[]   // 👈 добавили
+  versions   SceneVersion[]
+  characterStates CharacterState[]  
+
+  createdAt DateTime @default(now())
+}
+
+model Character {
+  id           String   @id @default(cuid())
+  name         String
+  age          Int?
+  personality  String
+  behavior     String
+  traits       String
+  
+  worldId String
+  world   World @relation(fields: [worldId], references: [id])
+
+  scenes SceneCharacter[]   // 👈 добавили
+  states CharacterState[]
+
+  createdAt DateTime @default(now())
+}
+
+model SceneVersion {
+  id        String   @id @default(cuid())
+
+  sceneId   String
+  scene     Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+
+  content   String
+  type      String   // create | edit | rewrite | restore
+  label     String
+
+  createdAt DateTime @default(now())
+
+  @@index([sceneId])
+}
+
+model SceneCharacter {
+  id          String @id @default(cuid())
+  sceneId     String
+  characterId String
+
+  scene     Scene     @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([sceneId, characterId])
+}
+
+model CharacterState {
+  id          String   @id @default(cuid())
+
+  characterId String
+  worldId     String 
+
+  character   Character @relation(fields: [characterId], references: [id])
+
+  sceneId     String?
+  scene       Scene?   @relation(fields: [sceneId], references: [id])
+
+  emotion     String
+  goal        String
+  stressLevel Int      @default(0)
+
+  relationships String?
+
+  emotionalState String?
+
+  // 🧠 Memory Compression
+  memorySummary  String?
+  memoryVersion  Int       @default(1)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([characterId])
+  @@index([sceneId])
+  @@unique([characterId, worldId])
+}
